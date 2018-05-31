@@ -236,9 +236,17 @@ innodb_flush_method=O_DIRECT
 
 ​		RAID0 尤其是在使用 EC2 这样的虚拟磁盘 (EBS) 的时候，使用软 RAID0 很重要。
 
-​	
+### 	碎片优化
 
+​		删除数据必然会在数据文件中造成不连续的空白空间,而当插入数据时,这些空白空间不会被利用起来.于是造成了数据的存储位置不连续,以及物理存储顺序与理论上的排序顺序不同,这种是数据碎片.实际上数据碎片分为两种,一种是单行数据碎片,另一种是多行数据碎片.前者的意思就是一行数据,被分成N个片段,存储在N个位置.后者的就是多行数据并未按照逻辑上的顺序排列.当有大量的删除和插入操作时,必然会产生很多未使用的空白空间,这些空间就是多出来的额外空间.索引也是文件数据,所以也会产生索引碎片,理由同上,大概就是顺序紊乱的问题.Engine 不同,OPTIMIZE 的操作也不一样的,MyISAM 因为索引和数据是分开的,所以 OPTIMIZE 可以整理数据文件,并重排索引。这样不但会浪费空间，并且查询速度也更慢。 
 
+​	查看表碎片的方法
+
+```
+mysql> select ROW_FORMAT,TABLE_ROWS,DATA_LENGTH,INDEX_LENGTH,MAX_DATA_LENGTH,DATA_FREE,ENGINE from TABLES where TABLE_SCHEMA='test_db' and TABLE_NAME='table_name' limit 1;
+```
+
+​	通过OPTIMIZE TABLE　table_name 后再查询一下结果 
 
 
 
