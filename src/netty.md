@@ -282,6 +282,28 @@ private void select(boolean oldWakenUp) throws IOException {
  	④延迟队列里面有个预约任务到期需要执行了 
 	如果上面情况都不满足, 代表select返回0了, 并且还有时间继续愉快的玩耍。这其中有一个统计select次数的计数器selectCnt, select过多并且都返回0, 默认512就代表过多了, 这表示需要调用rebuildSelector()重建selector了, 为啥呢, 因为nio有个臭名昭著的epoll cpu 100%的bug, 为了规避这个bug, 无奈重建吧。rebuildSelector的实际工作就是，重新打开一个selector, 将原来的那个selector中已注册的所有channel重新注册到新的selector中, 并将老的selectionKey全部cancel掉, 最后将的selector关闭 。重建selector后, 不死心的再selectNow一下 。select过后, 有了一些就绪的读啊写啊等事件, 就需要processSelectedKeys()登场处理了, 我只分析一下优化了selectedKeys的处理方法processSelectedKeysOptimized(selectedKeys.flip())。
 
+​	我们查看 `taskQueue` 定义的地方和被初始化的地方
+
+```
+private final Queue<Runnable> taskQueue;
+
+
+taskQueue = newTaskQueue(this.maxPendingTasks);
+
+@Override
+protected Queue<Runnable> newTaskQueue(int maxPendingTasks) {
+    // This event loop never calls takeTask()
+    return PlatformDependent.newMpscQueue(maxPendingTasks);
+}
+```
+
+​	我们发现 `taskQueue`在NioEventLoop中默认是mpsc队列，mpsc队列，即多生产者单消费者队列，netty使用mpsc，方便的将外部线程的task聚集，在reactor线程内部用单线程来串行执行，我们可以借鉴netty的任务执行模式来处理类似多线程数据上报，定时聚合的应用。
+
+- 当前reactor线程调用当前eventLoop执行任务，直接执行，否则，添加到任务队列稍后执行
+- netty内部的任务分为普通任务和定时任务，分别落地到MpscQueue和PriorityQueue
+- netty每次执行任务循环之前，会将已经到期的定时任务从PriorityQueue转移到MpscQueue
+- netty每隔64个任务检查一下是否该退出任务循环
+
 ### channel
 
 ​	Channel是Netty的核心概念之一，它是Netty网络通信的主体，由它负责同对端进行网络通信、注册和数据操作等功能。 
