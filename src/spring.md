@@ -10,8 +10,7 @@ Spring框架是一个分层架构，它包含一系列的功能要素，并被�
 
 ### Core Container
 
-​	Core Container(核心容器)包含有Core、Beans、Context和Expression Language模块 
-Core和Beans模块是框架的基础部分，提供IoC(转控制)和依赖注入特性。这里的基础概念是BeanFactory，它提供对Factory模式的经典实现来消除对程序性单例模式的需要，并真正地允许你从程序逻辑中分离出依赖关系和配置
+​	Core Container(核心容器)包含有Core、Beans、Context和Expression Language模块 。Core和Beans模块是框架的基础部分，提供IoC(反转控制)和依赖注入特性。这里的基础概念是BeanFactory，它提供对Factory模式的经典实现来消除对程序性单例模式的需要，并真正地允许你从程序逻辑中分离出依赖关系和配置。
 
 - Core模块主要包含Spring框架基本的核心工具类
 - Beans模块是所有应用都要用到的，它包含访问配置文件、创建和管理bean以及进行Inversion of Control/Dependency Injection(Ioc/DI)操作相关的所有类
@@ -267,7 +266,7 @@ public void preInstantiateSingletons() throws BeansException {
 
 ​	如何创建 Bean 的实例对象以及如何构建 Bean 实例对象之间的关联关系式 Spring 中的一个核心关键，下面是这个过程的流程图。
 
-![1528288142958](img/1528288142958.png)
+![1528297235062](img/1528297235062.png)
 
 ### AOP
 
