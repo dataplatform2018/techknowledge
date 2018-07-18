@@ -24,9 +24,7 @@ private void grow(int minCapacity) {
     }
    
    
-public static native void arraycopy(Object src,  int  srcPos,
-                                        Object dest, int destPos,
-                                        int length);
+public static native void arraycopy(Object src,  int  srcPos, Object dest, int destPos, int length);
 ```
 
 ### 	Vector
@@ -282,28 +280,36 @@ final Node<K,V> getNode(int hash, Object key) {
 ​		HashMap和双向链表合二为一即是LinkedHashMap。它是一个将所有Entry节点链入一个双向链表的HashMap。由于LinkedHashMap是HashMap的子类，所以LinkedHashMap自然会拥有HashMap的所有特性。 LinkedHashMap可以很好的支持LRU算法 。默认情况，遍历时的顺序是**按照插入节点的顺序**。这也是其与`HashMap`最大的区别。 
 
 - `accessOrder` ,默认是false，则迭代时输出的顺序是**插入节点的顺序**。若为true，则输出的顺序是按照访问节点的顺序。为true时，可以在这基础之上构建一个`LruCache`.
+
 - `LinkedHashMap`并没有重写任何put方法。但是其重写了构建新节点的`newNode()`方法.在每次构建新节点时，将**新节点链接在内部双向链表的尾部**
+
 - `accessOrder=true`的模式下,在`afterNodeAccess()`函数中，会将当前**被访问**到的节点e，**移动**至内部的双向链表**的尾部**。值得注意的是，`afterNodeAccess()`函数中，会修改`modCount`,因此当你正在`accessOrder=true`的模式下,迭代`LinkedHashMap`时，如果同时查询访问数据，也会导致`fail-fast`，因为迭代的顺序已经改变。
+
 - `nextNode()` 就是迭代器里的`next()`方法 。 
   该方法的实现可以看出，迭代`LinkedHashMap`，就是从**内部维护的双链表的表头开始循环输出**。 
   而双链表节点的顺序在`LinkedHashMap`的**增、删、改、查时都会更新。以满足按照插入顺序输出，还是访问顺序输出。**
+
 - 它与`HashMap`比，还有一个小小的优化，重写了`containsValue()`方法，直接遍历内部链表去比对value值是否相等。
 
-		![1527759836457](img/1527759836457.png)
+   ![1527759836457](img/1527759836457.png)
 
-	## 	WeakHashMap
+   
 
-		WeakHashMap 继承于AbstractMap，实现了Map接口.和[HashMap](http://www.cnblogs.com/skywang12345/p/3310835.html)一样，WeakHashMap 也是一个**散列表**，它存储的内容也是**键值对(key-value)映射**，而且**键和值都可以是null**。不过WeakHashMap的**键是“弱键”**。在 WeakHashMap 中，当某个键不再正常使用时，会被从WeakHashMap中被自动移除。更精确地说，对于一个给定的键，其映射的存在并不阻止垃圾回收器对该键的丢弃，这就使该键成为可终止的，被终止，然后被回收。某个键被终止时，它对应的键值对也就从映射中有效地移除了。     这个“弱键”的原理呢？大致上就是，**通过WeakReference和ReferenceQueue实现的**。 WeakHashMap的key是“弱键”，即是WeakReference类型的；ReferenceQueue是一个队列，它会保存被GC回收的“弱键”。实现步骤是：   
-	
-		①新建WeakHashMap，将“**键值对**”添加到WeakHashMap中。实际上，WeakHashMap是通过数组table保存Entry(键值对)；每一个Entry实际上是一个单向链表，即Entry是键值对链表.
-	
-		②当**某“弱键”不再被其它对象引用**，并**被GC回收**时。在GC回收该“弱键”时，**这个“弱键”也同时会被添加到ReferenceQueue(queue)队列**中。
-	
-		③当下一次我们需要操作WeakHashMap时，会先同步table和queue。table中保存了全部的键值对，而queue中保存被GC回收的键值对；同步它们，就是**删除table中被GC回收的键值对**。 
+   ## 	WeakHashMap
 
-	## 	TreeMap
+   ​	WeakHashMap 继承于AbstractMap，实现了Map接口。和HashMap一样，WeakHashMap 也是一个**散列表**，它存储的内容也是**键值对(key-value)映射**，而且**键和值都可以是null**。不过WeakHashMap的**键是“弱键”**。在 WeakHashMap 中，当某个键不再正常使用时，会被从WeakHashMap中被自动移除。更精确地说，对于一个给定的键，其映射的存在并不阻止垃圾回收器对该键的丢弃，这就使该键成为可终止的，被终止，然后被回收。某个键被终止时，它对应的键值对也就从映射中有效地移除了。     这个“弱键”的原理呢？大致上就是，**通过WeakReference和ReferenceQueue实现的**。 WeakHashMap的key是“弱键”，即是WeakReference类型的；ReferenceQueue是一个队列，它会保存被GC回收的“弱键”。实现步骤是：   
 
-		见平衡二叉树中的红黑树。
+   ①新建WeakHashMap，将“**键值对**”添加到WeakHashMap中。实际上，WeakHashMap是通过数组table保存Entry(键值对)；每一个Entry实际上是一个单向链表，即Entry是键值对链表.
+
+   ②当**某“弱键”不再被其它对象引用**，并**被GC回收**时。在GC回收该“弱键”时，**这个“弱键”也同时会被添加到ReferenceQueue(queue)队列**中。
+
+   ③当下一次我们需要操作WeakHashMap时，会先同步table和queue。table中保存了全部的键值对，而queue中保存被GC回收的键值对；同步它们，就是**删除table中被GC回收的键值对**。 
+
+   
+
+   ## 	TreeMap
+
+   	见平衡二叉树中的红黑树。
 
 ## Set
 
@@ -364,7 +370,7 @@ final Node<K,V> getNode(int hash, Object key) {
 
 ​		②红黑树
 
-​		红黑树又称红-黑二叉树，它首先是一颗二叉树，它具体二叉树所有的特性。同时红黑树更是一颗自平衡的排序二叉树。 红黑树需要满足的五条性质：  **性质一：节点是红色或者是黑色；** **性质二：根节点是黑色；** **性质三：每个叶节点（NIL或空节点）是黑色；**  **性质四：每个红色节点的两个子节点都是黑色的（也就是说不存在两个连续的红色节点）；**  **性质五：从任一节点到其没个叶节点的所有路径都包含相同数目的黑色节点；** 
+​		红黑树又称红-黑二叉树，它首先是一颗二叉树，它具体二叉树所有的特性。同时红黑树更是一颗自平衡的排序二叉树。 红黑树需要满足的五条性质：  **性质一：节点是红色或者是黑色；** **性质二：根节点是黑色；** **性质三：每个叶节点（NIL或空节点）是黑色；**  **性质四：每个红色节点的两个子节点都是黑色的（也就是说不存在两个连续的红色节点）；**  **性质五：从任一节点到其每个叶节点的所有路径都包含相同数目的黑色节点；** 
 
 ![1527775130606](img/1527775130606.png)
 
@@ -429,7 +435,7 @@ public V put(K key, V value) {
 
 ​		a)如果插入一个node引起了树的不平衡，AVL和RB-Tree都是最多只需要2次旋转操作，即两者都是O(1)；但是在删除node引起树的不平衡时，最坏情况下，AVL需要维护从被删node到root这条路径上所有node的平衡性，因此需要旋转的量级O(logN)，而RB-Tree最多只需3次旋转，只需要O(1)的复杂度。
 
-​		c)其次，AVL的结构相较RB-Tree来说更为平衡，在插入和删除node更容易引起Tree的unbalance，因此在大量数据需要插入或者删除时，AVL需要rebalance的频率会更高。因此，RB-Tree在需要大量插入和删除node的场景下，效率更高。自然，由于AVL高度平衡，因此AVL的search效率更高。
+​		b)其次，AVL的结构相较RB-Tree来说更为平衡，在插入和删除node更容易引起Tree的unbalance，因此在大量数据需要插入或者删除时，AVL需要rebalance的频率会更高。因此，RB-Tree在需要大量插入和删除node的场景下，效率更高。自然，由于AVL高度平衡，因此AVL的search效率更高。
 
 ​		c)map的实现只是折衷了两者在search、insert以及delete下的效率。总体来说，RB-tree的统计性能是高于AVL的。 
 
